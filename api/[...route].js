@@ -6,4 +6,9 @@ export const config = {
   },
 };
 
-export default app;
+export default function handler(req, res) {
+  if (!req.url.startsWith('/api/')) {
+    req.url = `/api${req.url}`;
+  }
+  app(req, res);
+}
