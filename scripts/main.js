@@ -20,9 +20,17 @@ const CATEGORY_STORAGE_KEY = 'flashcard-admin-categories-v1';
 const API_BASE_URL = (() => {
   if (window.__FLASHCARD_API_BASE__) return window.__FLASHCARD_API_BASE__;
   if (window.location.port === '4000') return '/api';
-  const isFileProtocol = window.location.protocol === 'file:';
-  const hostFallback = isFileProtocol ? 'localhost' : window.location.hostname || 'localhost';
-  return `${isFileProtocol ? 'http:' : window.location.protocol}//${hostFallback}:4000/api`;
+
+  const { protocol, hostname, origin } = window.location;
+  const isFileProtocol = protocol === 'file:';
+  const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(hostname);
+
+  if (isFileProtocol || isLocalHost) {
+    const host = hostname && hostname !== '' ? hostname : '127.0.0.1';
+    return `${isFileProtocol ? 'http:' : protocol}//${host}:4000/api`;
+  }
+
+  return `${origin}/api`;
 })();
 
 const elements = {
