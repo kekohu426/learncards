@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>娇姐学习卡片管理端</title>
+    <script>
+      (function initializeTheme() {
+        try {
+          const saved = localStorage.getItem('admin-theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme = saved || (prefersDark ? 'dark' : 'light');
+          document.documentElement.classList.remove('light', 'dark');
+          document.documentElement.classList.add(theme);
+        } catch (error) {
+          document.documentElement.classList.add('light');
+        }
+      })();
+    </script>
+    <script>
+      window.tailwind = window.tailwind || {};
+      window.tailwind.config = {
+        darkMode: 'class',
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100">
+    <div class="min-h-screen flex flex-col">
+      <header class="sticky top-0 z-50 bg-white bg-opacity-90 shadow-sm backdrop-blur-md transition-colors duration-300 dark:bg-slate-900 dark:bg-opacity-90">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex h-16 items-center justify-between md:h-20">
+            <div class="flex items-center">
+              <div class="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white">
+                <i class="fa-solid fa-gear text-lg"></i>
+              </div>
+              <div>
+                <h1 class="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-xl font-bold text-transparent md:text-2xl">
+                  媒体后台 · 娇姐话AI圈
+                </h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">管理学习卡片数据，支持新增与删除</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <button
+                id="admin-theme-toggle"
+                class="rounded-full bg-slate-100 p-2 text-slate-700 transition-colors duration-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                type="button"
+                aria-label="切换主题"
+              >
+                <i id="admin-theme-icon" class="fa-solid fa-moon"></i>
+              </button>
+              <a
+                href="./index.html"
+                class="inline-flex items-center rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                返回用户端
+                <i class="fa-solid fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container mx-auto flex-grow px-4 py-8 sm:px-6 lg:px-8">
+        <section class="mb-8 grid gap-6 lg:grid-cols-[2fr,1fr]">
+          <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <h2 class="mb-4 flex items-center text-lg font-semibold text-slate-800 dark:text-slate-100">
+              <i class="fa-solid fa-plus-circle mr-2 text-emerald-500"></i>
+              批量上传学习卡片
+            </h2>
+            <form id="upload-form" class="grid gap-4 md:grid-cols-2">
+              <div>
+                <label class="block text-sm font-medium text-slate-600 dark:text-slate-300">分类</label>
+                <select
+                  id="upload-category"
+                  required
+                  class="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                ></select>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-slate-600 dark:text-slate-300">选择图片</label>
+                <input
+                  id="upload-input"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  required
+                  class="mt-1 block w-full cursor-pointer rounded-lg border border-dashed border-emerald-300 bg-emerald-50 px-3 py-6 text-sm text-slate-700 file:mr-3 file:rounded-full file:border-0 file:bg-emerald-500 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-emerald-600 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-slate-100"
+                />
+              </div>
+              <div class="md:col-span-2 flex items-center justify-between">
+                <div class="text-sm text-slate-500 dark:text-slate-400">上传后将直接同步至 Supabase，刷新用户端即可看到最新学习卡片。</div>
+                <div
+                  id="upload-status"
+                  class="hidden text-sm font-medium text-emerald-600 dark:text-emerald-400"
+                ></div>
+                <button
+                  id="upload-submit"
+                  type="submit"
+                  class="inline-flex items-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:cursor-not-allowed disabled:bg-emerald-400 disabled:opacity-80"
+                >
+                  上传图片
+                  <i class="fa-solid fa-upload ml-2"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <h2 class="mb-4 flex items-center text-lg font-semibold text-slate-800 dark:text-slate-100">
+              <i class="fa-solid fa-database mr-2 text-blue-500"></i>
+              数据工具与分类管理
+            </h2>
+              <div class="space-y-5 text-sm text-slate-600 dark:text-slate-300">
+              <form id="add-category-form" class="grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900">
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-300">新增分类名称</label>
+                <div class="flex items-center gap-2">
+                  <input
+                    id="add-category-input"
+                    type="text"
+                    placeholder="例如：拼音卡"
+                    class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  />
+                  <button
+                    type="submit"
+                    class="inline-flex items-center rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-200 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  >
+                    添加
+                  </button>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400">新增分类会立即出现在筛选与上传选项中，并在导出数据时一并包含。</p>
+              </form>
+              <div>
+                <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">当前分类</h3>
+                <div id="category-list" class="flex flex-wrap gap-2 text-xs"></div>
+              </div>
+              <p class="rounded-lg bg-slate-100 px-3 py-2 text-xs leading-relaxed text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                所有分类与学习卡片都会直接同步至 Supabase，备份数据时请运行 <code>npm run export-data</code>。
+              </p>
+              <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                <div class="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <span>管理员令牌</span>
+                  <span id="admin-token-status" class="text-xs text-slate-400 dark:text-slate-500">未设置</span>
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    id="admin-token-input"
+                    type="password"
+                    placeholder="请输入后端 .env 中的 ADMIN_TOKEN"
+                    class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  />
+                  <div class="flex gap-2">
+                    <button
+                      id="save-admin-token"
+                      type="button"
+                      class="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-white transition-colors duration-200 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                    >
+                      保存
+                    </button>
+                    <button
+                      id="clear-admin-token"
+                      type="button"
+                      class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-500 transition-colors duration-200 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                    >
+                      清除
+                    </button>
+                  </div>
+                </div>
+                <p class="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                  令牌仅保存在当前浏览器的本地存储中，用于调用需要授权的管理接口。
+                </p>
+              </div>
+              <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                <div class="mb-3 flex items-center justify-between text-sm font-semibold text-slate-700 dark:text-slate-100">
+                  <span>邀请码管理</span>
+                  <span class="text-xs text-slate-400 dark:text-slate-500">一次仅限一个手机号使用</span>
+                </div>
+                <form id="invite-form" class="mb-3 grid gap-2 rounded-lg bg-slate-50 p-3 text-xs dark:bg-slate-800">
+                  <div class="flex gap-2">
+                    <div class="flex-1">
+                      <label class="mb-1 block text-slate-500 dark:text-slate-300">生成数量</label>
+                      <input id="invite-count" type="number" min="1" max="20" value="5" class="w-full rounded border border-slate-200 bg-white px-2 py-1 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-600 dark:bg-slate-900" />
+                    </div>
+                    <div class="flex-1">
+                      <label class="mb-1 block text-slate-500 dark:text-slate-300">前缀</label>
+                      <input id="invite-prefix" type="text" placeholder="可选" class="w-full uppercase tracking-widest rounded border border-slate-200 bg-white px-2 py-1 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-600 dark:bg-slate-900" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-slate-500 dark:text-slate-300">到期时间</label>
+                    <input id="invite-expires" type="datetime-local" class="w-full rounded border border-slate-200 bg-white px-2 py-1 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-600 dark:bg-slate-900" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-slate-500 dark:text-slate-300">备注</label>
+                    <textarea id="invite-notes" rows="2" placeholder="记录发放对象或其它说明" class="w-full rounded border border-slate-200 bg-white px-2 py-1 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-600 dark:bg-slate-900"></textarea>
+                  </div>
+                  <button type="submit" class="mt-1 rounded bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-200 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-300">生成邀请码</button>
+                </form>
+                <div id="invite-list" class="space-y-3 text-xs"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="category-filter" class="mb-6 rounded-xl border border-slate-100 bg-white p-6 shadow-sm transition-colors duration-300 dark:border-slate-700 dark:bg-slate-800">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="flex items-center text-lg font-semibold text-slate-800 dark:text-slate-100">
+              <i class="fa-solid fa-filter mr-2 text-indigo-500"></i>
+              分类筛选
+            </h2>
+            <div class="relative w-full sm:w-72">
+              <input
+                id="category-search"
+                type="text"
+                placeholder="搜索分类..."
+                class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-4 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              />
+              <i class="fa-solid fa-search text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            </div>
+          </div>
+          <div id="selected-category" class="mt-4 hidden flex-wrap items-center gap-2"></div>
+          <div id="category-grid" class="custom-scrollbar mt-4 grid max-h-60 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"></div>
+        </section>
+
+        <section class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="flex items-center text-lg font-semibold text-slate-800 dark:text-slate-100">
+              <i class="fa-solid fa-layer-group mr-2 text-indigo-500"></i>
+              学习卡片列表
+            </h2>
+            <div class="relative w-full sm:w-72">
+              <input
+                id="card-search"
+                type="text"
+                placeholder="搜索标题或提示文案..."
+                class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-4 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              />
+              <i class="fa-solid fa-search text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            </div>
+          </div>
+          <div
+            id="card-selection-toolbar"
+            class="mt-6 hidden flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
+          >
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-folder-open"></i>
+              <span id="selection-summary">已选择 0 张学习卡片</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                id="selection-clear"
+                type="button"
+                class="rounded-lg border border-blue-400 px-3 py-1 text-xs font-semibold text-blue-600 transition-colors duration-200 hover:bg-blue-100 dark:border-blue-600 dark:text-blue-100 dark:hover:bg-blue-800/60"
+              >
+                取消全选
+              </button>
+              <button
+                id="selection-delete"
+                type="button"
+                class="inline-flex items-center rounded-lg bg-red-500 px-3 py-1 text-xs font-semibold text-white transition-colors duration-200 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+              >
+                批量删除
+                <i class="fa-solid fa-trash ml-1"></i>
+              </button>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3" id="cards-container"></div>
+        </section>
+      </main>
+
+      <footer class="bg-slate-100 py-6 text-center text-xs text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+        本管理端仅供内部使用，操作后请导出数据备份。
+      </footer>
+    </div>
+    <script src="./scripts/admin.js"></script>
+  </body>
+</html>

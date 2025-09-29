@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>娇姐学习卡片 · 官方主页</title>
+    <script>
+      (function initializeTheme() {
+        try {
+          const saved = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme = saved || (prefersDark ? 'dark' : 'light');
+          document.documentElement.classList.remove('light', 'dark');
+          document.documentElement.classList.add(theme);
+        } catch (error) {
+          document.documentElement.classList.add('light');
+        }
+      })();
+    </script>
+    <script>
+      window.tailwind = window.tailwind || {};
+      window.tailwind.config = {
+        darkMode: 'class',
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="bg-gray-50 text-gray-900 transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100">
+    <div class="tech-bg min-h-screen">
+      <header class="sticky top-0 z-40 border-b border-gray-100 bg-white/90 backdrop-blur dark:border-gray-800 dark:bg-gray-900/90">
+        <div class="container mx-auto flex h-16 items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-8">
+          <div class="flex items-center space-x-3">
+            <div class="flex h-11 w-11 items-center justify-center rounded-full bg-sky-500 text-white shadow-lg">
+              <i class="fa-solid fa-layer-group text-xl"></i>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">娇姐出品</p>
+              <h1 class="text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-xl">娇姐学习卡片中心</h1>
+            </div>
+          </div>
+          <nav class="hidden items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-300 md:flex">
+            <a href="#features" class="hover:text-gray-900 dark:hover:text-gray-100">功能亮点</a>
+            <a href="#categories" class="hover:text-gray-900 dark:hover:text-gray-100">精选主题</a>
+            <a href="#workflow" class="hover:text-gray-900 dark:hover:text-gray-100">使用流程</a>
+            <a href="#invite" class="hover:text-gray-900 dark:hover:text-gray-100">邀请码</a>
+            <a href="#faq" class="hover:text-gray-900 dark:hover:text-gray-100">常见问题</a>
+          </nav>
+          <div class="flex items-center gap-3">
+            <button
+              id="theme-toggle"
+              type="button"
+              class="rounded-full bg-gray-100 p-2 text-gray-700 transition-colors duration-200 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              aria-label="切换主题"
+            >
+              <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
+            </button>
+            <button
+              id="login-button"
+              type="button"
+              class="hidden rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm"
+              aria-hidden="true"
+              tabindex="-1"
+            >
+              登录 / 注册
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1">
+        <section class="tech-hero relative mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-12">
+          <div class="grid items-center gap-10 lg:grid-cols-[1.1fr,0.9fr]">
+            <div class="space-y-6">
+              <span class="inline-flex items-center rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700 dark:bg-sky-900/40 dark:text-sky-200">
+                <i class="fa-solid fa-sparkles mr-2"></i>
+                家庭学习的科技化解决方案
+              </span>
+              <h2 class="text-3xl font-bold leading-tight text-gray-900 dark:text-gray-50 sm:text-4xl lg:text-5xl">
+                AI 赋能的学习卡片平台，为孩子打造沉浸式学习旅程
+              </h2>
+              <p class="text-base text-gray-600 dark:text-gray-300">
+                娇姐学习卡片中心聚合英语词汇、汉字识读、情绪表达、西游记主题等多维素材，结合 AI 语音播报、原图下载与智能提示语，为家长和老师提供高效的家庭教辅工具。
+              </p>
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <a
+                  href="index.html"
+                  class="inline-flex items-center justify-center rounded-full bg-blue-500 px-6 py-2.5 text-sm font-semibold text-white shadow transition-colors duration-200 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-500"
+                >
+                  进入学习卡片中心
+                  <i class="fa-solid fa-arrow-right ml-2"></i>
+                </a>
+                <a
+                  href="#features"
+                  class="inline-flex items-center justify-center rounded-full border border-blue-200 px-6 py-2.5 text-sm font-semibold text-blue-600 transition hover:border-blue-400 hover:text-blue-700 dark:border-blue-700 dark:text-blue-200 dark:hover:border-blue-500 dark:hover:text-blue-100"
+                >
+                  了解核心能力
+                  <i class="fa-solid fa-circle-info ml-2"></i>
+                </a>
+              </div>
+              <dl class="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300 sm:grid-cols-4">
+                <div>
+                  <dt class="font-semibold text-gray-900 dark:text-gray-100">学习卡片总数</dt>
+                  <dd class="mt-1 text-2xl font-bold text-sky-600 dark:text-sky-300">200+</dd>
+                </div>
+                <div>
+                  <dt class="font-semibold text-gray-900 dark:text-gray-100">主题分类</dt>
+                  <dd class="mt-1 text-2xl font-bold text-sky-600 dark:text-sky-300">6+</dd>
+                </div>
+                <div>
+                  <dt class="font-semibold text-gray-900 dark:text-gray-100">AI 语音支持</dt>
+                  <dd class="mt-1 text-2xl font-bold text-sky-600 dark:text-sky-300">循环播报</dd>
+                </div>
+                <div>
+                  <dt class="font-semibold text-gray-900 dark:text-gray-100">素材更新</dt>
+                  <dd class="mt-1 text-2xl font-bold text-sky-600 dark:text-sky-300">持续迭代</dd>
+                </div>
+              </dl>
+            </div>
+            <div class="relative overflow-hidden rounded-3xl border border-sky-100 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
+              <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sky-200 opacity-30 blur-3xl dark:bg-sky-900"></div>
+              <div class="relative space-y-5 p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-widest text-sky-500">Learning Deck</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-gray-50">精选英语动物主题</p>
+                  </div>
+                  <span class="rounded-full bg-sky-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">AI 音频</span>
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <div class="rounded-2xl bg-sky-50 p-5 text-left dark:bg-sky-900/20">
+                    <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-600 shadow-sm dark:bg-sky-900/40 dark:text-sky-100">light</span>
+                    <h3 class="mt-3 text-xl font-semibold text-gray-900 dark:text-gray-100">lion</h3>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">点击图片即可播放标准读音，贴合孩子的语音模仿路径。</p>
+                  </div>
+                  <div class="flex flex-col justify-between rounded-2xl bg-gradient-to-br from-teal-100 via-white to-sky-100 p-5 text-left dark:from-teal-900/30 dark:via-gray-900 dark:to-sky-900/20">
+                    <div>
+                      <span class="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-teal-700 shadow-sm dark:bg-teal-900/40 dark:text-teal-200">卡片亮点</span>
+                      <p class="mt-3 text-sm text-gray-700 dark:text-gray-300">三次循环播报与原图下载并行，帮助孩子巩固记忆，也方便家长打印练习。</p>
+                    </div>
+                    <div class="mt-4 flex items-center gap-3 text-sm text-teal-700 dark:text-teal-200">
+                      <i class="fa-solid fa-cloud-arrow-down"></i>
+                      一键保存高清原图，随时制作学习素材
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="features" class="container mx-auto space-y-10 px-4 py-16 sm:px-6 lg:px-8">
+          <div class="text-center">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-50">为何选择娇姐学习卡片系统</h2>
+            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">科技化工具 + 儿童友好体验，助力家长在家高效开展学习活动。</p>
+          </div>
+          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <article class="rounded-2xl bg-white p-6 text-left shadow-sm transition-shadow hover:shadow-lg dark:bg-gray-800">
+              <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-200">
+                <i class="fa-solid fa-layer-group text-lg"></i>
+              </div>
+              <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">多主题编排</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">英语、汉字、情绪表达、西游记角色等模块同步上线，覆盖启蒙到拓展的学习场景。</p>
+            </article>
+            <article class="rounded-2xl bg-white p-6 text-left shadow-sm transition-shadow hover:shadow-lg dark:bg-gray-800">
+              <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-200">
+                <i class="fa-solid fa-volume-high text-lg"></i>
+              </div>
+              <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">AI 发音助手</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">轻点卡片即播报，自动循环三次，支持手机、平板等多端使用，课堂与家庭场景都方便。</p>
+            </article>
+            <article class="rounded-2xl bg-white p-6 text-left shadow-sm transition-shadow hover:shadow-lg dark:bg-gray-800">
+              <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-200">
+                <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+              </div>
+              <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">智能提示语</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">提供可复制的提示语与学习说明，几秒钟就能补齐家长打卡或课堂互动所需文案。</p>
+            </article>
+            <article class="rounded-2xl bg-white p-6 text-left shadow-sm transition-shadow hover:shadow-lg dark:bg-gray-800">
+              <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-200">
+                <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+              </div>
+              <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">高清素材库</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">下载高清原图用于打印、平板展示或线上活动，轻松打造专属的学习资料包。</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="categories" class="bg-white py-16 dark:bg-gray-950">
+          <div class="container mx-auto space-y-10 px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+              <span class="text-xs uppercase tracking-wide text-sky-500">精选主题抢先看</span>
+              <h2 class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-50">覆盖多学科的学习卡片组合</h2>
+              <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">登录后可浏览全部卡片、播放音频并下载高清素材。</p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <article class="rounded-2xl border border-gray-100 bg-gray-50 p-5 text-left transition hover:-translate-y-1 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900">
+                <span class="text-xs font-semibold uppercase tracking-wide text-sky-500">英文动物卡</span>
+                <h3 class="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">Animal Friends</h3>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">生活化例句 + 情景插画，帮助孩子构建语境理解。</p>
+                <div class="mt-4 flex items-center gap-2 text-xs text-sky-500 dark:text-sky-300">
+                  <i class="fa-solid fa-volume-high"></i>
+                  轻触播放原声发音
+                </div>
+              </article>
+              <article class="rounded-2xl border border-gray-100 bg-gray-50 p-5 text-left transition hover:-translate-y-1 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900">
+                <span class="text-xs font-semibold uppercase tracking-wide text-emerald-500">情绪汉字卡</span>
+                <h3 class="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">Emotional Words</h3>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">通过表情插画和字义说明，引导孩子表达自我情绪。</p>
+                <div class="mt-4 flex items-center gap-2 text-xs text-emerald-500 dark:text-emerald-300">
+                  <i class="fa-solid fa-shield-heart"></i>
+                  配套情绪提示语
+                </div>
+              </article>
+              <article class="rounded-2xl border border-gray-100 bg-gray-50 p-5 text-left transition hover:-translate-y-1 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900">
+                <span class="text-xs font-semibold uppercase tracking-wide text-purple-500">西游记学习卡</span>
+                <h3 class="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">Journey Series</h3>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">人物角色、经典情节和关键词汇集合，沉浸式走进传统名著。</p>
+                <div class="mt-4 flex items-center gap-2 text-xs text-purple-500 dark:text-purple-300">
+                  <i class="fa-solid fa-book-open"></i>
+                  适合亲子共读打卡
+                </div>
+              </article>
+            </div>
+            <div class="text-center">
+              <a
+                href="index.html"
+                class="inline-flex items-center justify-center rounded-full bg-sky-500 px-6 py-2.5 text-sm font-semibold text-white shadow transition-colors duration-200 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-500"
+              >
+                查看全部学习卡片
+                <i class="fa-solid fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section id="workflow" class="py-16 dark:bg-gray-900">
+          <div class="container mx-auto space-y-10 px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+              <span class="text-xs uppercase tracking-wide text-emerald-500">简单三步即可开始</span>
+              <h2 class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-50">激活学习卡片账号的流程</h2>
+              <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">配合线下邀请码管理，安全可控地开放完整素材库。</p>
+            </div>
+            <div class="grid gap-6 md:grid-cols-3">
+              <article class="rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:bg-gray-800">
+                <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-200">
+                  <span class="text-sm font-semibold">01</span>
+                </div>
+                <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">领取邀请码</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">线下确认使用周期后，家长获得一次性邀请码和使用说明。</p>
+              </article>
+              <article class="rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:bg-gray-800">
+                <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-200">
+                  <span class="text-sm font-semibold">02</span>
+                </div>
+                <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">注册并绑定</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">使用手机号 + 密码完成注册，绑定邀请码后即可解锁所有学习卡片。</p>
+              </article>
+              <article class="rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:bg-gray-800">
+                <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-200">
+                  <span class="text-sm font-semibold">03</span>
+                </div>
+                <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">日常使用</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">孩子可随手点读、家长可下载素材，后台还可持续上传更新。</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section id="invite" class="bg-gradient-to-br from-blue-50 via-white to-blue-50 py-16 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+          <div class="container mx-auto grid items-center gap-8 px-4 sm:px-6 lg:grid-cols-[1.1fr,0.9fr] lg:px-8">
+            <div class="space-y-6">
+              <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
+                <i class="fa-solid fa-ticket mr-2"></i>
+                邀请码体系
+              </span>
+              <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-50">线下邀请码管理，保障家庭使用体验</h2>
+              <ul class="space-y-4 text-sm text-gray-600 dark:text-gray-300">
+                <li class="flex items-start gap-3">
+                  <i class="fa-solid fa-check mt-1 text-emerald-500"></i>
+                  <span>每个邀请码默认仅绑定一个手机号，方便统计使用情况，防止外泄。</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <i class="fa-solid fa-check mt-1 text-emerald-500"></i>
+                  <span>后台可设置有效期、备注和使用次数，线下收费或赠送流程简单清晰。</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <i class="fa-solid fa-check mt-1 text-emerald-500"></i>
+                  <span>通过管理端实时刷新，新增学习卡片后家长端立即可见。</span>
+                </li>
+              </ul>
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <a
+                  href="admin.html"
+                  class="inline-flex items-center justify-center rounded-full border border-blue-200 px-6 py-2.5 text-sm font-semibold text-blue-600 transition hover:border-blue-400 hover:text-blue-700 dark:border-blue-700 dark:text-blue-200 dark:hover:border-blue-500 dark:hover:text-blue-100"
+                >
+                  管理端立即体验
+                  <i class="fa-solid fa-arrow-up-right-from-square ml-2"></i>
+                </a>
+                <a
+                  href="index.html"
+                  class="inline-flex items-center justify-center rounded-full bg-blue-500 px-6 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-500"
+                >
+                  查看学习卡片示例
+                  <i class="fa-solid fa-eye ml-2"></i>
+                </a>
+              </div>
+            </div>
+            <div class="relative mx-auto w-full max-w-md overflow-hidden rounded-3xl border border-blue-100 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+              <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-200 opacity-40 blur-3xl dark:bg-blue-900"></div>
+              <div class="relative space-y-5">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-widest text-blue-500">Invite Code</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-gray-50">娇姐 · 家长尊享</p>
+                  </div>
+                  <span class="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">VIP</span>
+                </div>
+                <div class="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center text-2xl font-bold tracking-[0.35em] text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                  ABCD-1234
+                </div>
+                <ul class="space-y-3 text-sm text-gray-500 dark:text-gray-400">
+                  <li class="flex items-center gap-2">
+                    <i class="fa-solid fa-clock text-blue-400"></i>
+                    <span>有效期：30 天内随时激活</span>
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fa-solid fa-user text-blue-400"></i>
+                    <span>当前绑定：未使用</span>
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-blue-400"></i>
+                    <span>可访问主题：全部学习卡片模块</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="faq" class="container mx-auto space-y-10 px-4 py-16 sm:px-6 lg:px-8">
+          <div class="text-center">
+            <span class="text-xs uppercase tracking-wide text-purple-500">常见问题</span>
+            <h2 class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-50">家长在使用过程中最关心的几个问题</h2>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">如有更多需求，可随时联系娇姐话AI圈，我们会第一时间响应。</p>
+          </div>
+          <div class="mx-auto grid max-w-4xl gap-4">
+            <details class="group rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-lg dark:border-gray-700 dark:bg-gray-800" open>
+              <summary class="flex cursor-pointer items-center justify-between text-left text-base font-medium text-gray-900 dark:text-gray-100">
+                <span>孩子可以在手机上直接播放音频吗？</span>
+                <i class="fa-solid fa-chevron-down text-sm text-gray-400 transition group-open:rotate-180"></i>
+              </summary>
+              <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">可以。学习卡片使用浏览器内置语音引擎，轻触图片即可触发播报，并自动循环三次，适配大多数手机和平板设备。</p>
+            </details>
+            <details class="group rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <summary class="flex cursor-pointer items-center justify-between text-left text-base font-medium text-gray-900 dark:text-gray-100">
+                <span>上传的图片会保存在哪里？</span>
+                <i class="fa-solid fa-chevron-down text-sm text-gray-400 transition group-open:rotate-180"></i>
+              </summary>
+              <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">所有素材都会存储在 Supabase 的专属存储桶中，按分类自动归档，保证访问速度与数据安全。</p>
+            </details>
+            <details class="group rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <summary class="flex cursor-pointer items-center justify-between text-left text-base font-medium text-gray-900 dark:text-gray-100">
+                <span>邀请码失效后还能重新启用吗？</span>
+                <i class="fa-solid fa-chevron-down text-sm text-gray-400 transition group-open:rotate-180"></i>
+              </summary>
+              <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">可以。管理端支持延长有效期或生成新的邀请码，也能查看每个邀请码的使用记录和绑定手机号。</p>
+            </details>
+            <details class="group rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <summary class="flex cursor-pointer items-center justify-between text-left text-base font-medium text-gray-900 dark:text-gray-100">
+                <span>后续会增加更多学习资源吗？</span>
+                <i class="fa-solid fa-chevron-down text-sm text-gray-400 transition group-open:rotate-180"></i>
+              </summary>
+              <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">会的。我们已经排期情绪主题扩展卡、自然科学卡、节日主题卡等新内容，只需保持邀请码有效即可持续获取更新。</p>
+            </details>
+          </div>
+        </section>
+
+        <section class="bg-sky-600 py-16 text-white">
+          <div class="container mx-auto flex flex-col items-center gap-6 px-4 text-center sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold sm:text-4xl">立即使用娇姐学习卡片，为孩子点亮科技化学习之路</h2>
+            <p class="max-w-2xl text-sm text-sky-100">访问用户端即可浏览全部学习卡片、播放音频、下载原图。若需要上传专属素材，可开启管理端完成操作。</p>
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <a
+                href="index.html"
+                class="inline-flex items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-sky-600 shadow transition hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-white/80"
+              >
+                进入学习卡片中心
+                <i class="fa-solid fa-arrow-right ml-2"></i>
+              </a>
+              <a
+                href="admin.html"
+                class="inline-flex items-center justify-center rounded-full border border-white/60 px-6 py-2.5 text-sm font-semibold text-white transition hover:border-white hover:text-white"
+              >
+                管理端入口
+                <i class="fa-solid fa-sliders ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="border-t border-gray-200 bg-white py-6 text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+        <div class="container mx-auto flex flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6 lg:px-8">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-bookmark text-sky-500"></i>
+            <span>娇姐话AI圈 · 学习卡片平台</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <a href="index.html" class="hover:text-gray-700 dark:hover:text-gray-200">进入学习卡片中心</a>
+            <a href="admin.html" class="hover:text-gray-700 dark:hover:text-gray-200">进入管理端</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="./scripts/home.js"></script>
+  </body>
+</html>
