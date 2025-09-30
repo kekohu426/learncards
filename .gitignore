@@ -6,3 +6,4 @@ server/.env
 server/.env.local
 server/node_modules
 supabase/.temp
+.env

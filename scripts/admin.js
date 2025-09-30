@@ -450,11 +450,10 @@
         body: formData,
       });
 
+      const payload = await safeParseJson(response);
       if (!response.ok) {
-        const payload = await safeParseJson(response);
-        const detail = payload?.details ? `（${payload.details}）` : '';
-        const message = payload?.message || '上传失败，请稍后再试。';
-        throw new Error(`${message}${detail}`);
+        console.warn('[admin] 上传接口返回非 2xx', { status: response.status, payload });
+        throw new Error(buildFetchErrorMessage('上传失败，请稍后再试。', response, payload));
       }
 
       await hydrateFromApi();
@@ -508,6 +507,34 @@
     updateSelectionToolbar();
   }
 
+  async function requestDeleteCards(ids) {
+    if (!Array.isArray(ids) || !ids.length) {
+      return { deletedIds: [], missingIds: [] };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/cards/bulk-delete`, {
+      method: 'POST',
+      headers: buildAuthorizedHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ ids }),
+    });
+
+    const payload = await safeParseJson(response);
+
+    if (!response.ok) {
+      console.warn('[admin] 删除接口返回非 2xx', { status: response.status, payload });
+      throw new Error(buildFetchErrorMessage('删除失败，请稍后再试。', response, payload));
+    }
+
+    const deletedIds = Array.isArray(payload?.deletedIds)
+      ? payload.deletedIds.map(id => String(id))
+      : [];
+    const missingIds = Array.isArray(payload?.missingIds)
+      ? payload.missingIds.map(id => String(id))
+      : [];
+
+    return { deletedIds, missingIds };
+  }
+
   function handleSelectionClear() {
     if (!state.selectedCardIds.size) return;
     clearCardSelection();
@@ -536,43 +563,27 @@
       elements.selectionDelete.innerHTML = '删除中… <i class="fa-solid fa-spinner fa-spin ml-1"></i>';
     }
 
-    const failed = [];
-
     try {
       console.info('[admin] 开始批量删除学习卡片', { count: ids.length });
-      for (const id of ids) {
-        try {
-          const response = await fetch(`${API_BASE_URL}/cards/${id}`, {
-            method: 'DELETE',
-            headers: buildAuthorizedHeaders(),
-          });
-
-          if (!response.ok) {
-            const payload = await safeParseJson(response);
-            const message = payload?.message || '删除失败';
-            failed.push({ id, message });
-          }
-        } catch (error) {
-          failed.push({ id, message: error.message });
-        }
-      }
-
+      const { deletedIds, missingIds } = await requestDeleteCards(ids);
       await hydrateFromApi();
       refreshCategoryViews();
       renderCards();
       clearCardSelection();
+      const deletedCount = deletedIds.length;
+      const missingCount = missingIds.length;
 
-      if (failed.length) {
-        const info = failed
-          .map(item => `#${item.id}: ${item.message}`)
-          .slice(0, 5)
-          .join('\n');
-        alert(`部分学习卡片删除失败，共 ${failed.length} 条：\n${info}`);
-        console.warn('[admin] 批量删除部分失败', failed);
+      if (missingCount) {
+        const detail = missingIds.slice(0, 5).join(', ');
+        alert(`已删除 ${deletedCount} 条，但有 ${missingCount} 条未删除：${detail}`);
+        console.warn('[admin] 部分学习卡片未删除', { missingIds });
       } else {
         console.info('[admin] 批量删除完成');
-        alert('选中的学习卡片已全部删除');
+        alert(`选中的 ${deletedCount} 张学习卡片已全部删除`);
       }
+    } catch (error) {
+      console.error('批量删除学习卡片失败', error);
+      alert(`删除失败：${error.message}`);
     } finally {
       if (elements.selectionDelete) {
         elements.selectionDelete.disabled = false;
@@ -653,10 +664,11 @@
         body: JSON.stringify(payload),
       });
 
+      const result = await safeParseJson(response);
+
       if (!response.ok) {
-        const result = await safeParseJson(response);
-        const message = result?.message || '更新学习卡片失败';
-        throw new Error(message);
+        console.warn('[admin] 更新学习卡片接口返回非 2xx', { status: response.status, payload: result });
+        throw new Error(buildFetchErrorMessage('更新学习卡片失败', response, result));
       }
 
       await hydrateFromApi();
@@ -682,15 +694,13 @@
     const previewUrl = target?.__previewUrl;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/cards/${id}`, {
-        method: 'DELETE',
-        headers: buildAuthorizedHeaders(),
-      });
+      const { deletedIds, missingIds } = await requestDeleteCards([id]);
 
-      if (!response.ok) {
-        const payload = await safeParseJson(response);
-        const message = payload?.message || '删除失败，请稍后重试。';
-        throw new Error(message);
+      if (!deletedIds.length) {
+        const notDeletedReason = missingIds.length
+          ? `未找到 ID 为 ${missingIds[0]} 的学习卡片`
+          : '服务器未删除任何学习卡片';
+        throw new Error(notDeletedReason);
       }
 
       await hydrateFromApi();
@@ -716,11 +726,54 @@
   }
 
   async function safeParseJson(response) {
+    if (!response) return null;
     try {
-      return await response.json();
+      return await response.clone().json();
     } catch (error) {
+      try {
+        const text = await response.clone().text();
+        if (text) {
+          console.warn('[admin] 响应非 JSON 格式', {
+            status: response.status,
+            preview: text.slice(0, 200),
+          });
+          return { _rawText: text };
+        }
+      } catch (innerError) {
+        console.warn('[admin] 读取响应失败', innerError);
+      }
       return null;
     }
+  }
+
+  function buildFetchErrorMessage(defaultMessage, response, payload) {
+    const parts = [];
+    if (defaultMessage) {
+      parts.push(defaultMessage);
+    }
+    if (response) {
+      const statusText = response.statusText ? ` ${response.statusText}` : '';
+      parts.push(`HTTP ${response.status}${statusText}`.trim());
+    }
+
+    const serverMessage =
+      payload?.message ||
+      payload?.error?.message ||
+      payload?.error?.description ||
+      payload?.error ||
+      payload?.msg;
+
+    if (serverMessage && serverMessage !== defaultMessage) {
+      parts.push(`server: ${serverMessage}`);
+    }
+
+    const details = payload?.details || payload?.error?.details || payload?._rawText;
+    if (details && details !== serverMessage) {
+      parts.push(`details: ${details}`);
+    }
+
+    const message = parts.filter(Boolean).join(' | ');
+    return message || defaultMessage || '请求失败';
   }
 
   function buildCardMetadata(file, category) {
@@ -847,15 +900,16 @@
         body: JSON.stringify({ name: value }),
       });
 
+      const payload = await safeParseJson(response);
+
       if (!response.ok) {
-        const payload = await safeParseJson(response);
-        const message = payload?.message || '创建分类失败';
-        throw new Error(message);
+        console.warn('[admin] 创建分类接口返回非 2xx', { status: response.status, payload });
+        throw new Error(buildFetchErrorMessage('创建分类失败', response, payload));
       }
 
-      const payload = await response.json();
-      if (payload?.category) {
-        state.categories.push({ id: payload.category.id, name: payload.category.name });
+      const body = payload || {};
+      if (body?.category) {
+        state.categories.push({ id: body.category.id, name: body.category.name });
         state.categories.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
         refreshCategoryViews();
       }
@@ -883,11 +937,13 @@
         headers: buildAuthorizedHeaders(),
       });
 
+      const payload = await safeParseJson(response);
+
       if (!response.ok) {
-        throw new Error('加载邀请码失败');
+        console.warn('[admin] 加载邀请码接口返回非 2xx', { status: response.status, payload });
+        throw new Error(buildFetchErrorMessage('加载邀请码失败', response, payload));
       }
 
-      const payload = await response.json();
       state.invites = Array.isArray(payload?.invites) ? payload.invites : [];
       renderInviteList();
     } catch (error) {
@@ -960,10 +1016,11 @@
         body: JSON.stringify({ count, prefix, expiresAt, notes, maxUses: 1 }),
       });
 
+      const payload = await safeParseJson(response);
+
       if (!response.ok) {
-        const payload = await safeParseJson(response);
-        const message = payload?.message || '创建邀请码失败';
-        throw new Error(message);
+        console.warn('[admin] 创建邀请码接口返回非 2xx', { status: response.status, payload });
+        throw new Error(buildFetchErrorMessage('创建邀请码失败', response, payload));
       }
 
       elements.inviteForm?.reset();
@@ -1002,10 +1059,10 @@
           headers: buildAuthorizedHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ status: 'expired' }),
         });
+        const payload = await safeParseJson(response);
         if (!response.ok) {
-          const payload = await safeParseJson(response);
-          const message = payload?.message || '更新失败';
-          throw new Error(message);
+          console.warn('[admin] 更新邀请码状态接口返回非 2xx', { status: response.status, payload });
+          throw new Error(buildFetchErrorMessage('更新邀请码失败', response, payload));
         }
         await loadInvites();
         alert('已设为失效');
@@ -1093,10 +1150,11 @@
         body: JSON.stringify({ name }),
       });
 
+      const payload = await safeParseJson(response);
+
       if (!response.ok) {
-        const payload = await safeParseJson(response);
-        const message = payload?.message || '更新分类失败';
-        throw new Error(message);
+        console.warn('[admin] 更新分类接口返回非 2xx', { status: response.status, payload });
+        throw new Error(buildFetchErrorMessage('更新分类失败', response, payload));
       }
 
       await hydrateFromApi();
@@ -1120,10 +1178,11 @@
         body: JSON.stringify({}),
       });
 
+      const payload = await safeParseJson(response);
+
       if (!response.ok) {
-        const payload = await safeParseJson(response);
-        const message = payload?.message || '删除分类失败';
-        throw new Error(message);
+        console.warn('[admin] 删除分类接口返回非 2xx', { status: response.status, payload });
+        throw new Error(buildFetchErrorMessage('删除分类失败', response, payload));
       }
 
       await hydrateFromApi();

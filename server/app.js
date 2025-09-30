@@ -677,20 +677,40 @@ app.get('/api/cards', asyncHandler(async (req, res) => {
   res.json({ cards });
 }));
 
-app.delete('/api/cards/:id', requireAdmin, asyncHandler(async (req, res) => {
-  const cardId = Number.parseInt(req.params.id, 10);
-  if (Number.isNaN(cardId)) {
-    return res.status(400).json({ message: '无效的学习卡片 ID' });
+app.post('/api/cards/bulk-delete', requireAdmin, asyncHandler(async (req, res) => {
+  const { ids } = req.body || {};
+
+  if (!Array.isArray(ids) || !ids.length) {
+    return res.status(400).json({ message: '请提供需要删除的学习卡片 ID 列表' });
   }
 
-  const { error } = await supabase.from('cards').delete().eq('id', cardId);
+  const normalizedIds = Array.from(new Set(ids.map(item => Number.parseInt(item, 10)))).filter(
+    value => Number.isInteger(value) && value > 0,
+  );
+
+  if (!normalizedIds.length) {
+    return res.status(400).json({ message: '学习卡片 ID 列表无效' });
+  }
+
+  const { data, error } = await supabase
+    .from('cards')
+    .delete()
+    .in('id', normalizedIds)
+    .select('id');
+
   if (error) {
-    console.error(`[api] ${req.requestId} 删除学习卡片失败`, error);
-    return res.status(500).json({ message: '删除学习卡片失败', details: error.message });
+    console.error(`[api] ${req.requestId} 批量删除学习卡片失败`, error);
+    return res.status(500).json({ message: '批量删除学习卡片失败', details: error.message });
   }
 
-  console.info(`[api] ${req.requestId} card deleted id=${cardId}`);
-  res.json({ success: true });
+  const deletedIds = (data || []).map(item => item.id).filter(id => id != null);
+  const missingIds = normalizedIds.filter(id => !deletedIds.includes(id));
+
+  console.info(
+    `[api] ${req.requestId} cards bulk deleted requested=${normalizedIds.length} deleted=${deletedIds.length}`,
+  );
+
+  res.json({ success: true, deletedIds, missingIds });
 }));
 
 app.patch('/api/cards/:id', requireAdmin, asyncHandler(async (req, res) => {

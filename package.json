@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node server/index.js",
-    "fix-image-urls": "node server/scripts/fix-image-urls.js"
+    "fix-image-urls": "node server/scripts/fix-image-urls.js",
+    "health-check": "node server/scripts/health-check.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
