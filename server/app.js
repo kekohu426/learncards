@@ -878,6 +878,102 @@ app.post('/api/cards/upload', requireAdmin, upload.array('files', 30), asyncHand
     res.json({ success: true, cards });
 }));
 
+app.post('/api/cards/upload-url', requireAdmin, asyncHandler(async (req, res) => {
+  const { category, filename, mimeType } = req.body || {};
+
+  if (!category || !filename) {
+    return res.status(400).json({ message: '分类与文件名不能为空' });
+  }
+
+  const categoryId = await ensureCategoryId(category);
+  const categoryPrefix = createCategoryPrefix(category, categoryId);
+  const safeName = createSafeFileName(filename);
+  const storagePath = `${categoryPrefix}/${safeName}`;
+
+  const { data, error } = await supabase.storage
+    .from(bucketName)
+    .createSignedUploadUrl(storagePath, {
+      expiresIn: 120,
+      contentType: mimeType || 'application/octet-stream',
+      upsert: false,
+    });
+
+  if (error || !data?.signedUrl) {
+    console.error(`[api] ${req.requestId} 生成签名上传地址失败`, error);
+    return res.status(500).json({ message: '生成上传链接失败', details: error?.message });
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(bucketName).getPublicUrl(storagePath);
+
+  res.json({
+    uploadUrl: data.signedUrl,
+    token: data.token,
+    storagePath,
+    categoryId,
+    publicUrl,
+    fileName: safeName,
+  });
+}));
+
+app.post('/api/cards/complete-upload', requireAdmin, asyncHandler(async (req, res) => {
+  const {
+    category,
+    categoryId,
+    storagePath,
+    publicUrl,
+    title,
+    prompt,
+    audioText,
+  } = req.body || {};
+
+  if (!category || !categoryId || !storagePath || !publicUrl) {
+    return res.status(400).json({ message: '上传信息缺失，无法写入数据库' });
+  }
+
+  const normalizedCategoryId = Number.parseInt(categoryId, 10);
+  if (Number.isNaN(normalizedCategoryId)) {
+    return res.status(400).json({ message: '无效的分类 ID' });
+  }
+
+  const payload = {
+    title: (title || '').trim() || storagePath.split('/').pop(),
+    prompt: prompt ? String(prompt).trim() : null,
+    audio_text: audioText ? String(audioText).trim() : null,
+    image_url: publicUrl,
+    preview_url: publicUrl,
+    original_url: publicUrl,
+    category_id: normalizedCategoryId,
+  };
+
+  const { data, error } = await supabase
+    .from('cards')
+    .insert(payload)
+    .select('id, title, prompt, image_url, preview_url, original_url, audio_text, category_id, categories(name), created_at')
+    .single();
+
+  if (error) {
+    console.error(`[api] ${req.requestId} 写入上传数据失败`, error);
+    return res.status(500).json({ message: '写入学习卡片失败', details: error.message });
+  }
+
+  res.json({
+    card: {
+      id: data.id,
+      title: data.title,
+      prompt: data.prompt,
+      imageUrl: data.image_url,
+      previewImageUrl: data.preview_url,
+      originalImageUrl: data.original_url,
+      audioText: data.audio_text,
+      category: data.categories?.name ?? category,
+      categoryId: data.category_id,
+      createdAt: data.created_at,
+    },
+  });
+}));
+
 // 统一错误兜底
 app.use((error, req, res, next) => {
   const status = error?.status || 500;

@@ -17,6 +17,10 @@
     return `${origin}/api`;
   })();
   const ADMIN_TOKEN_STORAGE_KEY = 'flashcard-admin-token';
+  const NAV_ACTIVE_CLASSES = ['bg-emerald-500', 'text-white', 'shadow'];
+  const NAV_INACTIVE_CLASSES = ['bg-transparent', 'text-slate-600', 'dark:text-slate-300'];
+  const NAV_ACTIVE_HOVER = ['hover:bg-emerald-600', 'dark:hover:bg-emerald-600/80'];
+  const NAV_INACTIVE_HOVER = ['hover:bg-slate-100', 'dark:hover:bg-slate-800'];
 
   // Reactive state that drives all admin interactions.
   const state = {
@@ -28,11 +32,17 @@
     isUploading: false,
     selectedCardIds: new Set(),
     invites: [],
+    activePanel: 'cards',
   };
 
   const elements = {
+    panelButtons: Array.from(document.querySelectorAll('.admin-nav-btn')),
+    panels: Array.from(document.querySelectorAll('[data-panel]')),
     themeToggle: document.getElementById('admin-theme-toggle'),
     themeIcon: document.getElementById('admin-theme-icon'),
+    favoriteCount: document.getElementById('favorite-count'),
+    totalCases: document.getElementById('total-cases'),
+    totalCategories: document.getElementById('total-categories'),
     uploadCategory: document.getElementById('upload-category'),
     uploadForm: document.getElementById('upload-form'),
     uploadInput: document.getElementById('upload-input'),
@@ -67,6 +77,7 @@
   init();
 
   async function init() {
+    initPanelNavigation();
     await hydrateFromApi();
     refreshCategoryViews();
     renderCards();
@@ -76,7 +87,7 @@
 
     elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.categorySearch?.addEventListener('input', handleCategorySearch);
-  elements.categoryGrid?.addEventListener('click', handleCategoryClick);
+    elements.categoryGrid?.addEventListener('click', handleCategoryClick);
     elements.selectedCategory?.addEventListener('click', handleSelectedCategoryClick);
     elements.cardSearch?.addEventListener('input', handleCardSearch);
     elements.uploadForm?.addEventListener('submit', handleUploadForm);
@@ -138,11 +149,46 @@
         categories: state.categories.length,
         cards: state.cases.length,
       });
+      updateDashboardStats();
       await loadInvites();
     } catch (error) {
       console.warn('加载远程数据失败，将保留当前页面上的临时数据。', error);
     }
     updateSelectionToolbar();
+  }
+
+  function initPanelNavigation() {
+    if (!elements.panelButtons?.length || !elements.panels?.length) {
+      return;
+    }
+    elements.panelButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const target = button.getAttribute('data-panel-target');
+        if (target) {
+          setActivePanel(target);
+        }
+      });
+    });
+    setActivePanel(state.activePanel);
+  }
+
+  function setActivePanel(panel) {
+    state.activePanel = panel;
+    elements.panels.forEach(section => {
+      const isActive = section.dataset.panel === panel;
+      section.classList.toggle('hidden', !isActive);
+    });
+
+    elements.panelButtons.forEach(button => {
+      const target = button.getAttribute('data-panel-target');
+      const isActive = target === panel;
+      button.setAttribute('aria-current', isActive ? 'page' : 'false');
+
+      NAV_ACTIVE_CLASSES.forEach(cls => button.classList.toggle(cls, isActive));
+      NAV_INACTIVE_CLASSES.forEach(cls => button.classList.toggle(cls, !isActive));
+      NAV_ACTIVE_HOVER.forEach(cls => button.classList.toggle(cls, isActive));
+      NAV_INACTIVE_HOVER.forEach(cls => button.classList.toggle(cls, !isActive));
+    });
   }
 
   function loadAdminToken() {
@@ -492,25 +538,25 @@
     setUploadState(true, `正在上传 ${total} 张图片，请稍候…`);
 
     const metadata = Array.from(files).map(file => buildCardMetadata(file, category));
-    const formData = new FormData();
-    formData.append('category', category);
-    formData.append('metadata', JSON.stringify(metadata));
-    Array.from(files).forEach(file => formData.append('files', file));
 
     try {
       console.info('[admin] 开始上传', { category, fileCount: total });
-      const response = await fetch(`${API_BASE_URL}/cards/upload`, {
-        method: 'POST',
-        headers: buildAuthorizedHeaders(),
-        body: formData,
-      });
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
+        const meta = metadata[index];
 
-      const payload = await safeParseJson(response);
-      if (!response.ok) {
-        console.warn('[admin] 上传接口返回非 2xx', { status: response.status, payload });
-        throw new Error(buildFetchErrorMessage('上传失败，请稍后再试。', response, payload));
+        if (elements.uploadStatus) {
+          elements.uploadStatus.textContent = `正在上传第 ${index + 1} / ${total} 张：${file.name}`;
+        }
+
+        const signedUpload = await requestSignedUploadUrl(category, file);
+        await uploadFileToSignedUrl(signedUpload.uploadUrl, file);
+        await finalizeSignedUpload(category, signedUpload, meta);
       }
 
+      if (elements.uploadStatus) {
+        elements.uploadStatus.textContent = '全部文件上传完成，正在刷新数据…';
+      }
       await hydrateFromApi();
       refreshCategoryViews();
       renderCards();
@@ -546,6 +592,66 @@
     if (action === 'copy-data') {
       copyCardData(id, button);
     }
+  }
+
+  async function requestSignedUploadUrl(category, file) {
+    const response = await fetch(`${API_BASE_URL}/cards/upload-url`, {
+      method: 'POST',
+      headers: buildAuthorizedHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        category,
+        filename: file.name,
+        mimeType: file.type || 'application/octet-stream',
+      }),
+    });
+
+    const payload = await safeParseJson(response);
+    if (!response.ok) {
+      console.warn('[admin] 申请签名上传链接失败', { status: response.status, payload });
+      throw new Error(buildFetchErrorMessage(`获取上传链接失败（${file.name}）`, response, payload));
+    }
+
+    return payload;
+  }
+
+  async function uploadFileToSignedUrl(uploadUrl, file) {
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+      },
+      body: file,
+    });
+
+    if (!response.ok) {
+      const bodyText = await response.text().catch(() => '');
+      console.warn('[admin] 上传到 Supabase 失败', { status: response.status, bodyText });
+      throw new Error(`上传 Supabase 失败：HTTP ${response.status}`);
+    }
+  }
+
+  async function finalizeSignedUpload(category, signedUpload, meta) {
+    const response = await fetch(`${API_BASE_URL}/cards/complete-upload`, {
+      method: 'POST',
+      headers: buildAuthorizedHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        category,
+        categoryId: signedUpload.categoryId,
+        storagePath: signedUpload.storagePath,
+        publicUrl: signedUpload.publicUrl,
+        title: meta.title,
+        prompt: meta.prompt,
+        audioText: meta.audioText,
+      }),
+    });
+
+    const payload = await safeParseJson(response);
+    if (!response.ok) {
+      console.warn('[admin] 写入数据库失败', { status: response.status, payload });
+      throw new Error(buildFetchErrorMessage('写入数据库失败', response, payload));
+    }
+
+    return payload?.card || null;
   }
 
   function handleCardSelectionChange(event) {
@@ -1336,6 +1442,22 @@
     }
     if (elements.selectionClear) {
       elements.selectionClear.disabled = false;
+    }
+  }
+
+  function updateDashboardStats() {
+    const cardCount = state.cases.length;
+    const categoryCount = state.categories.length;
+
+    if (elements.totalCases) {
+      elements.totalCases.textContent = cardCount.toLocaleString('zh-CN');
+    }
+    if (elements.totalCategories) {
+      elements.totalCategories.textContent = categoryCount.toLocaleString('zh-CN');
+    }
+    if (elements.favoriteCount) {
+      const simulated = Math.max(268, cardCount * 6 + 120);
+      elements.favoriteCount.textContent = simulated.toLocaleString('zh-CN');
     }
   }
 
