@@ -76,7 +76,7 @@
 
     elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.categorySearch?.addEventListener('input', handleCategorySearch);
-    elements.categoryGrid?.addEventListener('click', handleCategoryClick);
+  elements.categoryGrid?.addEventListener('click', handleCategoryClick);
     elements.selectedCategory?.addEventListener('click', handleSelectedCategoryClick);
     elements.cardSearch?.addEventListener('input', handleCardSearch);
     elements.uploadForm?.addEventListener('submit', handleUploadForm);
@@ -227,13 +227,37 @@
 
     const buttons = filtered
       .map(category => {
-        const isSelected = state.selectedCategory === category.name;
+        const categoryName = category.name;
+        const isSelected = state.selectedCategory === categoryName;
         const base = 'px-3 py-2 text-sm rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400';
         const active = 'bg-blue-500 text-white shadow-sm';
         const inactive = 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600';
-        return `<button type="button" data-category="${escapeHtmlAttr(category.name)}" class="${base} ${
+
+        const categoryIds = state.cases
+          .filter(item => (item.category || '') === categoryName)
+          .map(item => String(item.id));
+        const hasCards = categoryIds.length > 0;
+        const allSelected = hasCards && categoryIds.every(id => state.selectedCardIds.has(id));
+        const selectLabel = hasCards ? (allSelected ? '取消全选' : '全选') : '无卡片';
+        const selectDisabled = hasCards ? '' : 'disabled';
+        const selectClasses = `px-3 py-2 text-xs rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 ${
+          allSelected
+            ? 'bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-600'
+            : 'bg-white text-blue-600 hover:bg-blue-50 dark:bg-slate-800 dark:text-blue-300 dark:hover:bg-slate-700'
+        } ${hasCards ? '' : 'cursor-not-allowed opacity-60'}`;
+
+        return `
+          <div class="flex items-center gap-2">
+            <button type="button" data-category-filter="${escapeHtmlAttr(categoryName)}" class="${base} ${
           isSelected ? active : inactive
-        }">${escapeHtml(category.name)}</button>`;
+        }">${escapeHtml(categoryName)}</button>
+            <button
+              type="button"
+              data-category-select="${escapeHtmlAttr(categoryName)}"
+              class="${selectClasses}"
+              ${selectDisabled}
+            >${escapeHtml(selectLabel)}</button>
+          </div>`;
       })
       .join('');
 
@@ -380,14 +404,45 @@
   }
 
   function handleCategoryClick(event) {
-    const button = event.target.closest('button[data-category]');
+    const selectAllButton = event.target.closest('button[data-category-select]');
+    if (selectAllButton) {
+      const category = selectAllButton.getAttribute('data-category-select');
+      if (!category) return;
+      toggleCategorySelection(category);
+      renderCategoryGrid();
+      renderCards();
+      return;
+    }
+
+    const button = event.target.closest('button[data-category-filter]');
     if (!button) return;
-    const category = button.getAttribute('data-category');
+    const category = button.getAttribute('data-category-filter');
     state.selectedCategory = state.selectedCategory === category ? null : category;
     clearCardSelection();
     renderCategoryGrid();
     renderSelectedCategory();
     renderCards();
+  }
+
+  function toggleCategorySelection(categoryName) {
+    const ids = state.cases
+      .filter(item => (item.category || '') === categoryName)
+      .map(item => String(item.id));
+
+    if (!ids.length) {
+      alert('该分类暂无学习卡片');
+      return;
+    }
+
+    const allSelected = ids.every(id => state.selectedCardIds.has(id));
+
+    if (allSelected) {
+      ids.forEach(id => state.selectedCardIds.delete(id));
+    } else {
+      ids.forEach(id => state.selectedCardIds.add(id));
+    }
+
+    updateSelectionToolbar();
   }
 
   function handleSelectedCategoryClick(event) {
@@ -824,11 +879,8 @@
     if (!category.includes('字母卡')) {
       return null;
     }
-    const upper = base.trim().toUpperCase();
-    if (/^[A-Z]$/.test(upper)) {
-      return upper;
-    }
-    return null;
+    const letter = extractLetter(base);
+    return letter || null;
   }
 
   function toTitleCase(value) {
@@ -843,8 +895,31 @@
 
   function extractLetter(value) {
     if (!value) return '';
-    const match = String(value).match(/[a-zA-Z]/);
-    return match ? match[0].toUpperCase() : String(value).slice(0, 1).toUpperCase();
+    const source = String(value).trim();
+
+    const letterKeywordMatch = source.match(/letter[_\-\s]*([a-zA-Z])/i);
+    if (letterKeywordMatch) {
+      return letterKeywordMatch[1].toUpperCase();
+    }
+
+    const separatorMatch = source.match(/(?:^|[_\-\s])([a-zA-Z])(?:[_\-\s]|$)/);
+    if (separatorMatch) {
+      return separatorMatch[1].toUpperCase();
+    }
+
+    const parts = source.split(/[^a-zA-Z0-9]+/).filter(Boolean);
+    for (const part of parts) {
+      if (/^[a-zA-Z]$/.test(part)) {
+        return part.toUpperCase();
+      }
+    }
+
+    const letters = source.match(/[a-zA-Z]/g);
+    if (letters && letters.length) {
+      return letters[letters.length - 1].toUpperCase();
+    }
+
+    return String(source).slice(0, 1).toUpperCase();
   }
 
   function copyCardData(id, button) {
@@ -1106,6 +1181,12 @@
       if (!confirm(`确定删除分类「${category.name}」吗？分类下的学习卡片将移动到“未分类”。`)) return;
       deleteCategory(category.id, category.name);
     }
+    if (action === 'select-category') {
+      toggleCategorySelection(category.name);
+      renderCategoryGrid();
+      renderCards();
+      return;
+    }
   }
 
   function renderCategoryList() {
@@ -1126,6 +1207,15 @@
             class="text-slate-400 transition-colors duration-200 hover:text-blue-500"
           >
             <i class="fa-solid fa-pen"></i>
+          </button>
+          <button
+            type="button"
+            data-action="select-category"
+            data-category-id="${escapeHtmlAttr(category.id)}"
+            class="text-slate-400 transition-colors duration-200 hover:text-emerald-500"
+            aria-label="全选该分类下的学习卡片"
+          >
+            <i class="fa-solid fa-check-double"></i>
           </button>
           <button
             type="button"

@@ -1,11 +1,13 @@
 import { app } from '../server/app.js';
 
-export const config = {
+const defaultConfig = {
   api: {
     bodyParser: false,
     externalResolver: true,
   },
 };
+
+export const config = defaultConfig;
 
 export default function handler(req, res) {
   const originalUrl = req.url;

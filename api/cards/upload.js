@@ -1,6 +1,12 @@
-import handler, { config } from '../[...route].js';
+import handler, { config as baseConfig } from '../[...route].js';
 
-export { config };
+export const config = {
+  api: {
+    ...(baseConfig?.api || {}),
+    sizeLimit: '25mb',
+    bodyParser: false,
+  },
+};
 
 export default function uploadProxy(req, res) {
   return handler(req, res);
